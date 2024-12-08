@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: nexus
   remote_user: alice
   become: true
   roles:

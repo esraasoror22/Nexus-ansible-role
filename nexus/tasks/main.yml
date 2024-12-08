@@ -14,12 +14,20 @@
       #url: https://download.sonatype.com/nexus/3/latest-unix.tar.gz
       #dest: /opt
       #mode: '0440'
+- name: check if nexus-3.75.1-01  exists on /opt
+  stat:
+    path: /opt/nexus-3.75.1-01 
+  register: path_folder
+- name: print nexus-3.75.1-01_folder value
+  debug:
+     var: path_folder
 
-- name: extract zip file
+- name: download and extract if not exists 
   unarchive:
     src: https://download.sonatype.com/nexus/3/latest-unix.tar.gz
     dest: /opt
     remote_src: yes
+  when: not path_folder.stat.exists
 - name: check if folder exists
   stat:
     path: /opt/nexus
