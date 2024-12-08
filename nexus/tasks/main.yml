@@ -1,0 +1,73 @@
+---
+# tasks file for nexus
+- name: update system
+  apt:
+    update_cache: yes
+
+- name: Install openjdk
+  apt:
+    name: openjdk-17-jdk
+    state: present
+
+      #- name: Download Nexus
+      #get_url:
+      #url: https://download.sonatype.com/nexus/3/latest-unix.tar.gz
+      #dest: /opt
+      #mode: '0440'
+
+- name: extract zip file
+  unarchive:
+    src: https://download.sonatype.com/nexus/3/latest-unix.tar.gz
+    dest: /opt
+    remote_src: yes
+- name: check if folder exists
+  stat:
+    path: /opt/nexus
+  register: dest_folder
+
+- name: print value
+  debug:
+    var: dest_folder
+
+- name: rename dir
+  shell: mv /opt/nexus-3.75.1-01 /opt/nexus
+  when: not dest_folder.stat.exists
+
+- name: create user for nexus
+  user:
+    name: nexus
+    state: present
+- name: insert line after specific pattern 
+  lineinfile:
+    path: /etc/sudoers
+    line: "nexus  ALL=(ALL) NOPASSWD: ALL"
+    insertafter: "^alice "
+
+- name: change ownership of /opt/nexus
+  file:
+    path: /opt/nexus
+    owner: nexus
+    group: nexus
+    recurse: yes
+- name: change ownership of /opt/sonatype-work
+  file:
+    path: /opt/sonatype-work
+    owner: nexus
+    group: nexus
+    recurse: yes
+
+- name: modify running user on /opt/nexus/bin/nexus.rc
+  lineinfile:
+    dest: /opt/nexus/bin/nexus.rc
+    line: 'run_as_user="nexus"'
+    insertafter: "^run_as_user"
+
+- name: share nexus unit service file
+  template:
+     src: /home/ubuntu/Day3/nexus/templates/nexus.service
+     dest: /etc/systemd/system/nexus.service
+  notify:
+     - start nexus 
+     - enable nexus 
+     - restart nexus 
+    
